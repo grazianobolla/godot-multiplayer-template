@@ -11,11 +11,20 @@ public partial class MonkeNetManager : Node
 {
     public static MonkeNetManager Instance { get; private set; }
     public bool IsServer { get; private set; } = false;
+    public Rid PhysicsSpace { get; private set; }
 
     private INetworkManager _networkManager;
+    public override void _EnterTree()
+    {
+        PhysicsSpace = GetViewport().World3D.Space;
+        PhysicsServer3D.SpaceSetActive(PhysicsSpace, false); // MonkeNet advances physics manually
+    }
 
     public override void _Ready()
     {
+        if (MonkeNetConfig.Instance == null)
+            throw new MonkeNetException("Missing MonkeNetConfig instance!");
+
         _networkManager = GetNode("NetworkManagerEnet") as INetworkManager;
         RegisterNetworkMessages();
         Instance = this;

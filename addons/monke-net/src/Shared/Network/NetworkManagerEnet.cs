@@ -57,22 +57,14 @@ public partial class NetworkManagerEnet : Node, INetworkManager
     {
         var enetHost = (_multiplayer.MultiplayerPeer as ENetMultiplayerPeer).Host;
 
-        switch (statistic)
+        return statistic switch
         {
-            case INetworkManager.NetworkStatisticEnum.SentBytes:
-                return (int)enetHost.PopStatistic(ENetConnection.HostStatistic.SentData);
-            case INetworkManager.NetworkStatisticEnum.ReceivedBytes:
-                return (int)enetHost.PopStatistic(ENetConnection.HostStatistic.ReceivedData);
-            case INetworkManager.NetworkStatisticEnum.SentPackets:
-                return (int)enetHost.PopStatistic(ENetConnection.HostStatistic.SentPackets);
-            case INetworkManager.NetworkStatisticEnum.ReceivedPackets:
-                return (int)enetHost.PopStatistic(ENetConnection.HostStatistic.ReceivedPackets);
-            case INetworkManager.NetworkStatisticEnum.PacketLoss:
-            case INetworkManager.NetworkStatisticEnum.RoundTripTime:
-            default:
-                GD.PrintErr("Undefined statistic");
-                return 0;
-        }
+            INetworkManager.NetworkStatisticEnum.SentBytes => (int)enetHost.PopStatistic(ENetConnection.HostStatistic.SentData),
+            INetworkManager.NetworkStatisticEnum.ReceivedBytes => (int)enetHost.PopStatistic(ENetConnection.HostStatistic.ReceivedData),
+            INetworkManager.NetworkStatisticEnum.SentPackets => (int)enetHost.PopStatistic(ENetConnection.HostStatistic.SentPackets),
+            INetworkManager.NetworkStatisticEnum.ReceivedPackets => (int)enetHost.PopStatistic(ENetConnection.HostStatistic.ReceivedPackets),
+            _ => throw new MonkeNetException("Undefined statistic"),
+        };
     }
 
     public int GetNetworkId()

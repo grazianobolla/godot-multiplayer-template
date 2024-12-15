@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://bog1us6frffkj"]
+[gd_scene load_steps=5 format=3 uid="uid://bog1us6frffkj"]
 
 [ext_resource type="Script" path="res://addons/monke-net/src/ServerSide/ServerManager.cs" id="1_sjtyc"]
 [ext_resource type="Script" path="res://addons/monke-net/src/ServerSide/ServerNetworkClock.cs" id="2_jgjwk"]
 [ext_resource type="Script" path="res://addons/monke-net/src/ServerSide/Entities/ServerEntityManager.cs" id="3_e5hxh"]
+[ext_resource type="Script" path="res://addons/monke-net/src/ServerSide/ServerInputReceiver.cs" id="4_ktnf1"]
 
 [node name="ServerManager" type="Node"]
 script = ExtResource("1_sjtyc")
@@ -12,3 +13,12 @@ script = ExtResource("2_jgjwk")
 
 [node name="EntityManager" type="Node" parent="."]
 script = ExtResource("3_e5hxh")
+
+[node name="InputReceiver" type="Node" parent="."]
+script = ExtResource("4_ktnf1")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 5.0
+autostart = true
+
+[connection signal="timeout" from="Timer" to="." method="OnTimerTimeout"]

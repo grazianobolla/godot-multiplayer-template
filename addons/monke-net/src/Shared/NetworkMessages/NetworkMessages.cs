@@ -14,7 +14,7 @@ public enum ChannelEnum : int
     Snapshot,
     Clock,
     EntityEvent,
-    CharacterController
+    ClientInput
 }
 
 public enum MessageTypeEnum : byte
@@ -24,14 +24,15 @@ public enum MessageTypeEnum : byte
     EntityEvent,
     EntityState,
     GameSnapshot,
-    CharacterControllerData,
-    CharacterControllerInput
+    PackedClientInputs,
+    ClientInputData,
+    ButtonData // TODO: wtf why do I have to define this here?
 }
 
 [RegisterMessage(MessageTypeEnum.EntityRequest, typeof(EntityRequest))]
 public struct EntityRequest : IPackableMessage
 {
-    public byte EntityType { get; set; }
+    public required byte EntityType { get; set; }
 
     public void ReadBytes(MessageReader reader)
     {
@@ -47,8 +48,8 @@ public struct EntityRequest : IPackableMessage
 [RegisterMessage(MessageTypeEnum.ClockSync, typeof(ClockSync))]
 public struct ClockSync : IPackableMessage
 {
-    public int ClientTime { get; set; }
-    public int ServerTime { get; set; }
+    public required int ClientTime { get; set; }
+    public required int ServerTime { get; set; }
 
     public void ReadBytes(MessageReader reader)
     {
@@ -64,13 +65,12 @@ public struct ClockSync : IPackableMessage
 }
 
 [RegisterMessage(MessageTypeEnum.EntityEvent, typeof(EntityEvent))]
-
 public struct EntityEvent : IPackableMessage
 {
-    public EntityEventEnum Event { get; set; }
-    public int EntityId { get; set; }
-    public byte EntityType { get; set; }
-    public int Authority { get; set; }
+    public required EntityEventEnum Event { get; set; }
+    public required int EntityId { get; set; }
+    public required byte EntityType { get; set; }
+    public required int Authority { get; set; }
 
     public void ReadBytes(MessageReader reader)
     {
@@ -91,10 +91,9 @@ public struct EntityEvent : IPackableMessage
 }
 
 [RegisterMessage(MessageTypeEnum.GameSnapshot, typeof(GameSnapshot))]
-
 public struct GameSnapshot : IPackableMessage
 {
-    public int Tick { get; set; }
+    public required int Tick { get; set; }
     public IEntityStateMessage[] States { get; set; }
 
     public readonly void WriteBytes(MessageWriter writer)
@@ -110,11 +109,10 @@ public struct GameSnapshot : IPackableMessage
     }
 }
 
-[RegisterMessage(MessageTypeEnum.CharacterControllerData, typeof(CharacterControllerInput))]
-
-public struct CharacterControllerInput : IPackableMessage
+[RegisterMessage(MessageTypeEnum.PackedClientInputs, typeof(PackedClientInputs))]
+public struct PackedClientInputs : IPackableMessage
 {
-    public int Tick { get; set; } // This is the Tick stamp for the latest generated input (Inputs[Inputs.Length]), all other Ticks are (Tick - index)
+    public required int Tick { get; set; } // This is the Tick stamp for the latest generated input (Inputs[Inputs.Length]), all other Ticks are (Tick - index)
     public IPackableElement[] Inputs { get; set; }
 
     public readonly void WriteBytes(MessageWriter writer)
@@ -126,6 +124,6 @@ public struct CharacterControllerInput : IPackableMessage
     public void ReadBytes(MessageReader reader)
     {
         Tick = reader.ReadInt32();
-        Inputs = reader.ReadArray<IPackableElement>(MessageTypeEnum.CharacterControllerInput);
+        Inputs = reader.ReadArray<IPackableElement>(MessageTypeEnum.ClientInputData);
     }
 }

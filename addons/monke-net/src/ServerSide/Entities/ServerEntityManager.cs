@@ -10,8 +10,13 @@ namespace MonkeNet.Server;
 public partial class ServerEntityManager : ServerNetworkNode
 {
     private EntitySpawner _entitySpawner;
+    private int _entityIdCount = 0;
+    public override void _EnterTree()
+    {
+        _entitySpawner = MonkeNetConfig.Instance.EntitySpawner;
+    }
 
-    protected override void OnNetworkProcessTick(int currentTick)
+    public void SendSnapshotData(int currentTick)
     {
         var snapshotCommand = PackSnapshot(currentTick);
         SendCommandToClient(MessageTypeEnum.GameSnapshot, 0, snapshotCommand, INetworkManager.PacketModeEnum.Unreliable, (int)ChannelEnum.Snapshot);
@@ -21,7 +26,7 @@ public partial class ServerEntityManager : ServerNetworkNode
     {
         if (command is EntityRequest entityRequest)
         {
-            SpawnEntity(clientId, entityRequest.EntityType, (int)NetworkManagerEnet.AudienceMode.Broadcast, 0);
+            SpawnEntity(++_entityIdCount, entityRequest.EntityType, (int)NetworkManagerEnet.AudienceMode.Broadcast, clientId);
         }
     }
 
@@ -32,13 +37,7 @@ public partial class ServerEntityManager : ServerNetworkNode
 
     protected override void OnClientDisconnected(int peerId)
     {
-        DestroyEntity(peerId, (int)NetworkManagerEnet.AudienceMode.Broadcast); //FIXME: remove all entities associated with the peerId
-    }
-
-    public override void _Ready()
-    {
-        _entitySpawner = GetNode<EntitySpawner>(MonkeNetManager.Instance.EntitySpawnerNodePath);
-        base._Ready();
+        DestroyEntity(peerId, (int)NetworkManagerEnet.AudienceMode.Broadcast); //FIXME: remove all entities associated with the peerId?
     }
 
     /// <summary>
@@ -73,8 +72,6 @@ public partial class ServerEntityManager : ServerNetworkNode
     /// <param name="authority"></param>
     private void SpawnEntity(int entityId, byte entityType, int targetId, int authority)
     {
-        _entitySpawner.SpawnEntity(entityId, entityType, authority);
-
         var entityEvent = new EntityEvent
         {
             Event = EntityEventEnum.Created,
@@ -82,6 +79,8 @@ public partial class ServerEntityManager : ServerNetworkNode
             EntityType = entityType,
             Authority = authority
         };
+
+        _entitySpawner.SpawnEntity(entityEvent); // Execute event locally
 
         SendCommandToClient(MessageTypeEnum.EntityEvent, targetId, entityEvent, INetworkManager.PacketModeEnum.Reliable, (int)ChannelEnum.EntityEvent);
     }
@@ -93,8 +92,6 @@ public partial class ServerEntityManager : ServerNetworkNode
     /// <param name="targetId"></param>
     private void DestroyEntity(int entityId, int targetId)
     {
-        _entitySpawner.DestroyEntity(entityId);
-
         var entityEvent = new EntityEvent
         {
             Event = EntityEventEnum.Destroyed,
@@ -102,6 +99,8 @@ public partial class ServerEntityManager : ServerNetworkNode
             EntityType = 0,
             Authority = 0
         };
+
+        _entitySpawner.DestroyEntity(entityEvent);  // Execute event locally
 
         SendCommandToClient(MessageTypeEnum.EntityEvent, targetId, entityEvent, INetworkManager.PacketModeEnum.Reliable, (int)ChannelEnum.EntityEvent);
     }

@@ -38,7 +38,7 @@ public partial class NetworkDebug : Node
 
     public void DisplayDebugInformation()
     {
-        if (ImGui.CollapsingHeader("General Network per Second"))
+        if (ImGui.CollapsingHeader("Network Stats"))
         {
             ImGui.Text($"Sent Bytes {_sentPerSecond}");
             ImGui.Text($"Rec. Bytes {_recPerSecond}");

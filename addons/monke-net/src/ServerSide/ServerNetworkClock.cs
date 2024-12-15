@@ -21,7 +21,6 @@ public partial class ServerNetworkClock : ServerNetworkNode
 
     public override void _Process(double delta)
     {
-        DisplayDebugInformation();
         SolveSendNetworkTickEvent(delta);
     }
 
@@ -56,11 +55,12 @@ public partial class ServerNetworkClock : ServerNetworkNode
         }
     }
 
-    private void DisplayDebugInformation()
+    public void DisplayDebugInformation()
     {
-        ImGui.Begin($"Clock Information");
-        ImGui.Text($"Network Tickrate {GetNetworkTickRate()}hz");
-        ImGui.Text($"Current Tick {_currentTick}");
-        ImGui.End();
+        if (ImGui.CollapsingHeader("Clock Information"))
+        {
+            ImGui.Text($"Network Tickrate {GetNetworkTickRate()}hz");
+            ImGui.Text($"Current Tick {_currentTick}");
+        }
     }
 }

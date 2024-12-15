@@ -1,3 +1,7 @@
+[godot-jolt]
+version = "0.14.0-stable"
+build = "4963c66efe"
+
 [configuration]
 
 entry_symbol = "godot_jolt_main"
