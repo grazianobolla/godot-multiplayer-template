@@ -12,9 +12,11 @@ script = ExtResource("1_cinm7")
 _playerMovement = NodePath("SharedPlayerMovement")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("CapsuleMesh_ysstd")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_ry084")
 
 [node name="SharedPlayerMovement" type="Node" parent="." node_paths=PackedStringArray("_characterBody")]

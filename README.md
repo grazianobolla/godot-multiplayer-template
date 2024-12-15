@@ -31,7 +31,7 @@ This repository is the developing environment for the addon, including tests and
 ## 📐 Project Structure (WIP)
 MonkeNet is structured in different "components" that are Nodes inside the Godot engine, these components work together to provide different functionalities. Usually for the same funcionality there is a Client component and a Server component altough they do different things. Here there are some examples:
 
-- `ClientEntityManager.cs` might handle *requesting* an entity on the server while `ServerEntityManager.cs` actually takes that request and spawns the entity.
+- `ClientEntityManager.cs` handles *requesting* an entity on the server while `ServerEntityManager.cs` actually takes that request and spawns the entity.
 - `ClientNetworkClock.cs` receives clock data from the server and updates its internal state, while the `ServerNetworkClock.cs` just runs a simple clock that increments each tick.
 
 ### 🐵 MonkeNet Singleton
@@ -42,6 +42,8 @@ The `MonkeNetManager` class is a singleton that can be used anywhere in your pro
 - Entity Manager
 - Network Clock
 - Snapshot Interpolator
+- Snapshot Rollbacker
+- Input Manager
 
 ### 🖧 Server Side Components
 - Server Manager
@@ -52,6 +54,7 @@ The `MonkeNetManager` class is a singleton that can be used anywhere in your pro
 - Message Serializer
 - Entity Spawner
 - Network Manager
+- MonkeNet Config
 
 ---
 

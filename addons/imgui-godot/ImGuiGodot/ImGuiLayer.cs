@@ -1,5 +1,4 @@
 using Godot;
-using ImGuiGodot.Internal;
 #if GODOT_PC
 #nullable enable
 
@@ -17,15 +16,15 @@ public partial class ImGuiLayer : CanvasLayer
     public override void _EnterTree()
     {
         Name = "ImGuiLayer";
-        Layer = State.Instance.LayerNum;
+        Layer = Internal.State.Instance.LayerNum;
 
         _parentViewport = GetViewport();
         _subViewportRid = AddLayerSubViewport(this);
         _canvasItem = RenderingServer.CanvasItemCreate();
         RenderingServer.CanvasItemSetParent(_canvasItem, GetCanvas());
 
-        State.Instance.Renderer.InitViewport(_subViewportRid);
-        State.Instance.Viewports.SetMainWindow(GetWindow(), _subViewportRid);
+        Internal.State.Instance.Renderer.InitViewport(_subViewportRid);
+        Internal.State.Instance.Viewports.SetMainWindow(GetWindow(), _subViewportRid);
     }
 
     public override void _Ready()
@@ -50,7 +49,7 @@ public partial class ImGuiLayer : CanvasLayer
         else
         {
             SetProcessInput(false);
-            State.Instance.Renderer.OnHide();
+            Internal.State.Instance.Renderer.OnHide();
             _subViewportSize = Vector2I.Zero;
             RenderingServer.CanvasItemClear(_canvasItem);
         }
@@ -58,27 +57,20 @@ public partial class ImGuiLayer : CanvasLayer
 
     public override void _Input(InputEvent @event)
     {
-        if (State.Instance.Input.ProcessInput(@event))
+        if (Internal.State.Instance.Input.ProcessInput(@event))
         {
             _parentViewport.SetInputAsHandled();
         }
     }
 
-    public void UpdateViewport()
+    public Vector2I UpdateViewport()
     {
+        Vector2I vpSize = _parentViewport is Window w ? w.Size
+            : (_parentViewport as SubViewport)?.Size
+            ?? throw new System.InvalidOperationException();
+
         if (_visible)
         {
-            Vector2I vpSize;
-#pragma warning disable IDE0045 // Convert to conditional expression
-            if (_parentViewport is Window w)
-                vpSize = w.Size;
-            else if (_parentViewport is SubViewport svp)
-                vpSize = svp.Size;
-            else
-                throw new System.InvalidOperationException();
-#pragma warning restore IDE0045 // Convert to conditional expression
-            State.Instance.ViewportSize = vpSize;
-
             var ft = _parentViewport.GetFinalTransform();
             if (_subViewportSize != vpSize || _finalTransform != ft)
             {
@@ -98,6 +90,8 @@ public partial class ImGuiLayer : CanvasLayer
                     vptex);
             }
         }
+
+        return vpSize;
     }
 
     private static Rid AddLayerSubViewport(Node parent)

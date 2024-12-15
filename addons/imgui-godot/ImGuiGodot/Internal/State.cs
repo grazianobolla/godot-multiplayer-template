@@ -17,6 +17,7 @@ internal sealed class State : IDisposable
 
     private static readonly IntPtr _backendName = Marshal.StringToCoTaskMemAnsi("godot4_net");
     private static IntPtr _rendererName = IntPtr.Zero;
+    private static nint _clipBuf = 0;
     private IntPtr _iniFilenameBuffer = IntPtr.Zero;
 
     internal Viewports Viewports { get; }
@@ -27,11 +28,25 @@ internal sealed class State : IDisposable
     internal float Scale { get; set; } = 1.0f;
     internal float JoyAxisDeadZone { get; set; } = 0.15f;
     internal int LayerNum { get; private set; } = 128;
-    internal Vector2I ViewportSize { get; set; }
     internal ImGuiLayer Layer { get; set; } = null!;
     internal bool InProcessFrame { get; set; }
 
     internal static State Instance { get; set; } = null!;
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate void PlatformSetImeDataFn(
+        nint ctx,
+        ImGuiViewportPtr vp,
+        ImGuiPlatformImeDataPtr data);
+    private static readonly PlatformSetImeDataFn _setImeData = SetImeData;
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate void SetClipboardTextFn(nint ud, nint text);
+    private static readonly SetClipboardTextFn _setClipboardText = SetClipboardText;
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate nint GetClipboardTextFn(nint ud);
+    private static readonly GetClipboardTextFn _getClipboardText = GetClipboardText;
 
     public State(IRenderer renderer)
     {
@@ -64,6 +79,11 @@ internal sealed class State : IDisposable
         {
             io.NativePtr->BackendPlatformName = (byte*)_backendName;
             io.NativePtr->BackendRendererName = (byte*)_rendererName;
+            io.NativePtr->PlatformSetImeDataFn = Marshal.GetFunctionPointerForDelegate(_setImeData);
+            io.NativePtr->SetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(
+                _setClipboardText);
+            io.NativePtr->GetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(
+                _getClipboardText);
         }
 
         Viewports = new Viewports();
@@ -184,6 +204,34 @@ internal sealed class State : IDisposable
         ImGui.Render();
         ImGui.UpdatePlatformWindows();
         Renderer.Render();
+    }
+
+    private static void SetImeData(nint ctx, ImGuiViewportPtr vp, ImGuiPlatformImeDataPtr data)
+    {
+        int windowID = (int)vp.PlatformHandle;
+
+        DisplayServer.WindowSetImeActive(data.WantVisible, windowID);
+        if (data.WantVisible)
+        {
+            Vector2I pos = new(
+                (int)(data.InputPos.X - vp.Pos.X),
+                (int)(data.InputPos.Y - vp.Pos.Y + data.InputLineHeight)
+                );
+            DisplayServer.WindowSetImePosition(pos, windowID);
+        }
+    }
+
+    private static void SetClipboardText(nint ud, nint text)
+    {
+        DisplayServer.ClipboardSet(Marshal.PtrToStringUTF8(text));
+    }
+
+    private static nint GetClipboardText(nint ud)
+    {
+        if (_clipBuf != 0)
+            Marshal.FreeCoTaskMem(_clipBuf);
+        _clipBuf = Marshal.StringToCoTaskMemUTF8(DisplayServer.ClipboardGet());
+        return _clipBuf;
     }
 }
 #endif
