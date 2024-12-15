@@ -14,24 +14,24 @@ class_name ImGuiConfig extends Resource
 var _fonts: Array
 
 func _get_property_list() -> Array[Dictionary]:
-    return [
-        {
-            "name": "Fonts",
-            "class_name": &"",
-            "type": TYPE_ARRAY,
-            "hint": PROPERTY_HINT_TYPE_STRING,
-            "hint_string": "24/17:ImGuiFont",
-            "usage": PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_STORAGE
-        }
-    ]
+	return [
+		{
+			"name": "Fonts",
+			"class_name": &"",
+			"type": TYPE_ARRAY,
+			"hint": PROPERTY_HINT_TYPE_STRING,
+			"hint_string": "24/17:ImGuiFont",
+			"usage": PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_STORAGE
+		}
+	]
 
 func _get(property: StringName) -> Variant:
-    if property == &"Fonts":
-        return _fonts
-    return null
+	if property == &"Fonts":
+		return _fonts
+	return null
 
 func _set(property: StringName, value: Variant) -> bool:
-    if property == &"Fonts":
-        _fonts = value
-        return true
-    return false
+	if property == &"Fonts":
+		_fonts = value
+		return true
+	return false
