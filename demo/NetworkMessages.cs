@@ -34,8 +34,8 @@ public struct EntityStateMessage : IEntityStateMessage
 }
 
 // Character inputs sent to the server by a local player every time a key is pressed
-[RegisterMessage(MessageTypeEnum.CharacterControllerInput, typeof(CharacterInputMessage))]
-public struct CharacterInputMessage : IPackableElement
+[RegisterMessage(MessageTypeEnum.ClientInputData, typeof(CharacterInputMessage))]
+public struct CharacterInputMessage : IClientInputData
 {
     public byte Keys { get; set; } // Single byte were each bit is a different pressed key
     public float CameraYaw { get; set; } // Yaw (were are we looking at)
