@@ -1,14 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://b8b17u47wg4nh"]
+[gd_scene load_steps=5 format=3 uid="uid://b8b17u47wg4nh"]
 
 [ext_resource type="Script" path="res://demo/players/local_player/LocalPlayer.cs" id="1_vcufi"]
 [ext_resource type="Script" path="res://demo/players/local_player/FirstPersonCameraController.cs" id="2_q1b5c"]
 [ext_resource type="Script" path="res://demo/players/SharedPlayerMovement.cs" id="3_4xwgn"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2bt7m"]
-albedo_color = Color(0.98613, 0.349683, 1, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_y0eya"]
-material = SubResource("StandardMaterial3D_2bt7m")
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_x3j47"]
 
@@ -18,7 +12,7 @@ _cameraController = NodePath("RotationHelperY/Camera")
 _playerMovement = NodePath("SharedPlayerMovement")
 
 [node name="RotationHelperY" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
 metadata/_edit_lock_ = true
 
 [node name="Camera" type="Camera3D" parent="RotationHelperY"]
@@ -26,10 +20,8 @@ current = true
 fov = 90.0
 script = ExtResource("2_q1b5c")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("CapsuleMesh_y0eya")
-
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_x3j47")
 
 [node name="SharedPlayerMovement" type="Node" parent="." node_paths=PackedStringArray("_characterBody")]

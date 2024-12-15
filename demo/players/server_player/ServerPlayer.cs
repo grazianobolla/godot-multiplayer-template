@@ -14,6 +14,13 @@ public partial class ServerPlayer : CharacterBody3D, INetworkedEntity, IServerEn
     public int Authority { get; set; }
     public float Yaw { get; set; }
 
+    public void OnProcessTick(int tick, IPackableElement genericInput)
+    {
+        CharacterInputMessage input = (CharacterInputMessage)genericInput;
+        Yaw = input.CameraYaw;
+        _playerMovement.AdvancePhysics(input);
+    }
+
     // Capture current entity state, sent by the Server Entity Manager to all clients
     public IEntityStateMessage GenerateCurrentStateMessage()
     {
@@ -24,10 +31,5 @@ public partial class ServerPlayer : CharacterBody3D, INetworkedEntity, IServerEn
             Position = this.Position,
             Velocity = this.Velocity
         };
-    }
-
-    public void OnProcessTick(int tick, IPackableElement input)
-    {
-        _playerMovement.AdvancePhysics((CharacterInputMessage)input);
     }
 }
