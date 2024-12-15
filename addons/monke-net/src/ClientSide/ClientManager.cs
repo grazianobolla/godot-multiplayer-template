@@ -25,10 +25,24 @@ public partial class ClientManager : Node
     private ClientNetworkClock _clock;
     private NetworkDebug _networkDebug;
     private ClientEntityManager _entityManager;
+    private ClientInputManager _inputManager;
+    private SnapshotRollbacker _snapshotRollbacker;
+
+    private bool _networkReady = false;
 
     public override void _EnterTree()
     {
         Instance = this;
+    }
+
+    public override void _Ready()
+    {
+        _networkDebug = GetNode<NetworkDebug>("NetworkDebug");
+        _clock = GetNode<ClientNetworkClock>("ClientClock");
+        _snapshotInterpolator = GetNode<SnapshotInterpolator>("SnapshotInterpolator");
+        _entityManager = GetNode<ClientEntityManager>("EntityManager");
+        _inputManager = GetNode<ClientInputManager>("InputManager");
+        _snapshotRollbacker = GetNode<SnapshotRollbacker>("SnapshotRollbacker");
     }
 
     public override void _Process(double delta)
@@ -36,34 +50,49 @@ public partial class ClientManager : Node
         DisplayDebugInformation();
     }
 
+    // TODO: I don't know if manually stepping physics inside _PhysicsProcess is a good idea,
+    // as internally _PhysicsProcess will call _step() and _flush_queries() the same way I'm doing right now...
+    // causing multiple calls to the same PhysicsServer methods
     public override void _PhysicsProcess(double delta)
     {
+        // Advance Clock
         _clock.ProcessTick();
-        int currentTick = _clock.GetCurrentTick();                  // Local tick (ex: 100)
-        int currentRemoteTick = _clock.GetCurrentRemoteTick();      // Tick at which a packet will arrive to the server if its sent right now (ex: 108) (there is an 8 tick delay client->server)
+        int currentTick = _clock.GetCurrentTick();
+        int currentRemoteTick = _clock.GetCurrentRemoteTick();
+
+        var input = _inputManager.GenerateAndTransmitInputs(currentRemoteTick);         // Read and send produced input to the server
+        EntitiesCallProcessTick(currentTick, currentRemoteTick, input);                                    // Call OnProcessTick on all entities, pass current input so they can simulate
         EmitSignal(SignalName.ClientTick, currentTick, currentRemoteTick);
+
+        PhysicsServer3D.Singleton.Call("space_step", MonkeNetManager.Instance.PhysicsSpace, PhysicsUtils.DeltaTime);
+        PhysicsServer3D.Singleton.Call("space_flush_queries", MonkeNetManager.Instance.PhysicsSpace);
+
+        _snapshotRollbacker.RegisterPrediction(currentRemoteTick, input);               // Register all local predictions
+    }
+
+    // Calls OnProcessTick on all entities
+    private static void EntitiesCallProcessTick(int currentTick, int remoteTick, IClientInputData input)
+    {
+        foreach (var node in MonkeNetConfig.Instance.EntitySpawner.Entities)
+        {
+            if (node is IClientEntity clientEntity)
+            {
+                clientEntity.OnProcessTick(currentTick, remoteTick, input);
+            }
+        }
     }
 
     public void Initialize(INetworkManager networkManager, string address, int port)
     {
         _networkManager = networkManager;
-
-        _networkDebug = GetNode<NetworkDebug>("NetworkDebug");
         _networkDebug.NetworkManager = _networkManager;
 
-        // Stores NetworkClock node instance
-        _clock = GetNode<ClientNetworkClock>("ClientClock");
         _clock.LatencyCalculated += OnLatencyCalculated;
 
-        // Stores SnapshotInterpolator node instance
-        _snapshotInterpolator = GetNode<SnapshotInterpolator>("SnapshotInterpolator");
-
-        _entityManager = GetNode<ClientEntityManager>("EntityManager");
-
-        _networkManager.CreateClient(address, port);
         _networkManager.PacketReceived += OnPacketReceived;
+        _networkManager.CreateClient(address, port);
 
-        GD.Print("Initialized Client Manager");
+        GD.Print("Client Manager Initialized");
     }
 
     public void SendCommandToServer(MessageTypeEnum type, IPackableMessage command, INetworkManager.PacketModeEnum mode, int channel)
@@ -93,6 +122,7 @@ public partial class ClientManager : Node
         EmitSignal(SignalName.LatencyCalculated, latencyAverageTicks, jitterAverageTicks);
         EmitSignal(SignalName.NetworkReady); //TODO: calculate this in other way, this should only be emmited once and
                                              //right now it will be emitted every time the colck calculates latency
+        _networkReady = true;
     }
 
     private void DisplayDebugInformation()
@@ -109,6 +139,8 @@ public partial class ClientManager : Node
             _clock.DisplayDebugInformation();
             _networkDebug.DisplayDebugInformation();
             _snapshotInterpolator.DisplayDebugInformation();
+            _inputManager.DisplayDebugInformation();
+            _snapshotRollbacker.DisplayDebugInformation();
             ImGui.End();
         }
     }

@@ -1,10 +1,9 @@
 using Godot;
-using MonkeNet.Server;
 
 namespace GameDemo;
 
 // Server Player movement script
-public partial class ServerPlayerMovement : CharacterControllerServer<CharacterInputMessage>
+public partial class ServerPlayerMovement : Node
 {
     private ServerPlayer _player;
 
@@ -15,7 +14,7 @@ public partial class ServerPlayerMovement : CharacterControllerServer<CharacterI
     }
 
     // Called each time we receive a PlayerInputMessage from the client, we move the player accordingly (same code is run on the client)
-    protected override Vector3 CalculateVelocity(CharacterBody3D body, CharacterInputMessage input)
+    protected Vector3 CalculateVelocity(CharacterBody3D body, CharacterInputMessage input)
     {
         _player.Yaw = input.CameraYaw;
         return PlayerMovementCalculator.CalculateVelocity(body, input);

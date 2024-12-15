@@ -19,7 +19,7 @@ public static class PlayerMovementCalculator
     public static readonly float MaxRunSpeed = 5;
     public static readonly float MaxWalkSpeed = 2;
     public static readonly float Gravity = 9.8f;
-    public static readonly float JumpVelocity = 2.0f;
+    public static readonly float JumpVelocity = 6.0f;
 
     public static Vector3 CalculateVelocity(CharacterBody3D body, CharacterInputMessage input)
     {

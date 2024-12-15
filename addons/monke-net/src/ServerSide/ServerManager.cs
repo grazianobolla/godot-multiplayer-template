@@ -19,11 +19,25 @@ public partial class ServerManager : Node
 
     private INetworkManager _networkManager;
     private ServerNetworkClock _serverClock;
+    private ServerEntityManager _entityManager;
+    private ServerInputReceiver _inputReceiver;
+
     private int _currentTick = 0;
 
     public override void _EnterTree()
     {
         Instance = this;
+
+        // Set the _Process() tickrate to be the same as the _PhysicsProcess() to not waste resources, we shouldn't be using _Process() anywhere
+        // TODO: Update: Uncommenting this makes the network conditions shit. It seems like maybe it affects packet reading or something like that? Investigate further.
+        //Engine.MaxFps = Engine.PhysicsTicksPerSecond; // This should be used
+        Engine.MaxFps = 120; // Should be enough...
+    }
+
+    public override void _Ready()
+    {
+        _entityManager = GetNode<ServerEntityManager>("EntityManager");
+        _inputReceiver = GetNode<ServerInputReceiver>("InputReceiver");
     }
 
     public override void _Process(double delta)
@@ -31,10 +45,43 @@ public partial class ServerManager : Node
         DisplayDebugInformation();
     }
 
+    // TODO: I don't know if manually stepping physics inside _PhysicsProcess is a good idea,
+    // as internally _PhysicsProcess will call _step() and _flush_queries() the same way I'm doing right now...
+    // causing multiple calls to the same PhysicsServer methods
     public override void _PhysicsProcess(double delta)
     {
         _currentTick = _serverClock.ProcessTick();
+
         EmitSignal(SignalName.ServerTick, _currentTick);
+        EntitiesCallProcessTick(_currentTick);
+
+        _inputReceiver.DropOutdatedInputs(_currentTick); // Delete all inputs that we don't need anymore
+
+        PhysicsServer3D.Singleton.Call("space_step", MonkeNetManager.Instance.PhysicsSpace, PhysicsUtils.DeltaTime);
+        PhysicsServer3D.Singleton.Call("space_flush_queries", MonkeNetManager.Instance.PhysicsSpace);
+
+        _entityManager.SendSnapshotData(_currentTick);
+    }
+
+    private void EntitiesCallProcessTick(int currentTick)
+    {
+        foreach (var node in MonkeNetConfig.Instance.EntitySpawner.Entities)
+        {
+            if (node is IServerEntity serverEntity)
+            {
+                IPackableElement input = _inputReceiver.GetInputForEntityTick(serverEntity, currentTick);
+
+                if (input != null)
+                {
+                    serverEntity.OnProcessTick(currentTick, input);
+                }
+            }
+        }
+    }
+
+    private void OnTimerTimeout()
+    {
+        GD.Print($"Server Status: Tick {_currentTick}, Framerate {Engine.GetFramesPerSecond()}, Physics Tick {Engine.PhysicsTicksPerSecond}hz");
     }
 
     private void OnNetworkProcess(double delta)
@@ -89,9 +136,17 @@ public partial class ServerManager : Node
 
     private void DisplayDebugInformation()
     {
-        ImGui.Begin("Server Information");
-        ImGui.Text($"Framerate {Engine.GetFramesPerSecond()}fps");
-        ImGui.Text($"Physics Tick {Engine.PhysicsTicksPerSecond}hz");
-        ImGui.End();
+        ImGui.SetNextWindowPos(System.Numerics.Vector2.Zero);
+        if (ImGui.Begin("Server Information",
+            ImGuiWindowFlags.NoMove
+                | ImGuiWindowFlags.NoResize
+                | ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            ImGui.Text($"Framerate {Engine.GetFramesPerSecond()}fps");
+            ImGui.Text($"Physics Tick {Engine.PhysicsTicksPerSecond}hz");
+            _serverClock.DisplayDebugInformation();
+            ImGui.End();
+        }
+
     }
 }

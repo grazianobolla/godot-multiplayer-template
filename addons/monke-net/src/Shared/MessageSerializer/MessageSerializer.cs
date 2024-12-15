@@ -4,12 +4,18 @@ using System.IO;
 
 namespace MonkeNet.Serializer;
 
+/// <summary>
+/// Defines methods to pack/unpack fields into byte array
+/// </summary>
 public interface IPackableMessage
 {
     public void WriteBytes(MessageWriter writer);
     public void ReadBytes(MessageReader reader);
 }
 
+/// <summary>
+/// Workaround interface to pack/unpack IPackableMessage into other IPackableMessage (as arrays, lists, etc)
+/// </summary>
 public interface IPackableElement : IPackableMessage
 {
     public IPackableElement GetCopy();

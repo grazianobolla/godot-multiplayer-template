@@ -27,6 +27,22 @@ public class MessageReader(MemoryStream stream) : BinaryReader(stream)
 
     public Vector3 ReadVector3()
     {
-        return new Vector3(ReadSingle(), ReadSingle(), ReadSingle());
+        return new(ReadSingle(), ReadSingle(), ReadSingle());
+    }
+
+    public Transform3D ReadTransform()
+    {
+        return new()
+        {
+            Origin = ReadVector3(),
+            Basis = new Basis(ReadVector3(), ReadVector3(), ReadVector3())
+        };
+    }
+
+    public T ReadPackable<T>() where T : IPackableMessage, new()
+    {
+        T res = new();
+        res.ReadBytes(this);
+        return res;
     }
 }

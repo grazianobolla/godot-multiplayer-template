@@ -22,4 +22,17 @@ public class MessageWriter(MemoryStream stream) : BinaryWriter(stream)
         Write(vector.Y);
         Write(vector.Z);
     }
+
+    public void Write(Transform3D transform)
+    {
+        Write(transform.Origin);
+        Write(transform.Basis.Column0);
+        Write(transform.Basis.Column1);
+        Write(transform.Basis.Column2);
+    }
+
+    public void Write(IPackableMessage message)
+    {
+        message.WriteBytes(this);
+    }
 }

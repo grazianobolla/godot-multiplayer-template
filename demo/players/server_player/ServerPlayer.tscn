@@ -1,14 +1,15 @@
 [gd_scene load_steps=5 format=3 uid="uid://hh18mdgclbq6"]
 
 [ext_resource type="Script" path="res://demo/players/server_player/ServerPlayer.cs" id="1_cinm7"]
-[ext_resource type="Script" path="res://demo/players/server_player/ServerPlayerMovement.cs" id="2_0q8yc"]
+[ext_resource type="Script" path="res://demo/players/SharedPlayerMovement.cs" id="2_miufo"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ysstd"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ry084"]
 
-[node name="ServerPlayer" type="CharacterBody3D"]
+[node name="ServerPlayer" type="CharacterBody3D" node_paths=PackedStringArray("_playerMovement")]
 script = ExtResource("1_cinm7")
+_playerMovement = NodePath("SharedPlayerMovement")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("CapsuleMesh_ysstd")
@@ -16,5 +17,6 @@ mesh = SubResource("CapsuleMesh_ysstd")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_ry084")
 
-[node name="PlayerMovement" type="Node" parent="."]
-script = ExtResource("2_0q8yc")
+[node name="SharedPlayerMovement" type="Node" parent="." node_paths=PackedStringArray("_characterBody")]
+script = ExtResource("2_miufo")
+_characterBody = NodePath("..")

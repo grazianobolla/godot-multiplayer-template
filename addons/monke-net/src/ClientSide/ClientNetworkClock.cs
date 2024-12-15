@@ -152,7 +152,7 @@ public partial class ClientNetworkClock : ClientNetworkNode
 
     public void DisplayDebugInformation()
     {
-        if (ImGui.CollapsingHeader("Network Clock Information"))
+        if (ImGui.CollapsingHeader("Network Clock"))
         {
             ImGui.Text($"Synced Tick {GetCurrentRemoteTick()}");
             ImGui.Text($"Local Tick {GetCurrentTick()}");

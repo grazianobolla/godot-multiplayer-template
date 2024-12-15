@@ -108,7 +108,7 @@ public partial class SnapshotInterpolator : ClientNetworkNode
 
     public void DisplayDebugInformation()
     {
-        if (ImGui.CollapsingHeader("Snapshot Interpolator Information"))
+        if (ImGui.CollapsingHeader("Snapshot Interpolator"))
         {
             if (_interpolationFactor > 1) ImGui.PushStyleColor(ImGuiCol.Text, 0xFF0000FF);
             ImGui.Text($"Interp. Factor {_interpolationFactor:0.00}");

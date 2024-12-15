@@ -1,5 +1,6 @@
 using Godot;
 using MonkeNet.Client;
+using MonkeNet.NetworkMessages;
 using MonkeNet.Shared;
 
 namespace GameDemo;
@@ -14,12 +15,12 @@ public partial class GameEntitySpawner : EntitySpawner
     }
 
     // When an entity is spawned, what should be done on the client side?
-    protected override Node HandleEntityCreationClientSide(int entityId, byte entityType)
+    protected override Node HandleEntityCreationClientSide(EntityEvent @event)
     {
-        if (entityType == (byte)EntityType.Player)
+        if (@event.EntityType == (byte)EntityType.Player)
         {
             // TODO: use Authority/Owner herem not EntityId, as EntityId will not always be the same as the network id of the client who spawned it
-            PackedScene playerScene = entityId == ClientManager.Instance.GetNetworkId() ?
+            PackedScene playerScene = @event.Authority == ClientManager.Instance.GetNetworkId() ?
                 GD.Load<PackedScene>("res://demo/players/local_player/LocalPlayer.tscn") :
                 GD.Load<PackedScene>("res://demo/players/dummy_player/DummyPlayer.tscn");
 
@@ -30,9 +31,9 @@ public partial class GameEntitySpawner : EntitySpawner
     }
 
     // When an entity is spawned, what should be done on the server side?
-    protected override Node HandleEntityCreationServerSide(int entityId, byte entityType)
+    protected override Node HandleEntityCreationServerSide(EntityEvent @event)
     {
-        if (entityType == (byte)EntityType.Player)
+        if (@event.EntityType == (byte)EntityType.Player)
         {
             PackedScene playerScene = GD.Load<PackedScene>("res://demo/players/server_player/ServerPlayer.tscn");
             return playerScene.Instantiate(); // Spawn player scene
@@ -40,5 +41,4 @@ public partial class GameEntitySpawner : EntitySpawner
 
         throw new System.Exception("No Node was returned for Server Entity Creation event");
     }
-
 }

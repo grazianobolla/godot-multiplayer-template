@@ -1,18 +1,20 @@
 using Godot;
+using MonkeNet.NetworkMessages;
+using System.Collections.Generic;
 
 namespace MonkeNet.Shared;
 
 public abstract partial class EntitySpawner : Node
 {
-    protected abstract Node HandleEntityCreationClientSide(int entityId, byte entityType);
-    protected abstract Node HandleEntityCreationServerSide(int entityId, byte entityType);
-
     public static EntitySpawner Instance { get; private set; }
 
     /// <summary>
     /// Stores a collection of the currently instanced entities
     /// </summary>
-    public Godot.Collections.Array<Node> Entities { get; private set; } = [];
+    public List<Node> Entities { get; private set; } = [];
+
+    protected abstract Node HandleEntityCreationClientSide(EntityEvent @event);
+    protected abstract Node HandleEntityCreationServerSide(EntityEvent @event);
 
     public override void _Ready()
     {
@@ -20,40 +22,41 @@ public abstract partial class EntitySpawner : Node
     }
 
     // Can be called from both the server or a client, so it needs to handle both scenarios
-    public Node SpawnEntity(int entityId, byte entityType, int authority)
+    public Node SpawnEntity(EntityEvent @event)
     {
         Node instancedNode;
         if (MonkeNetManager.Instance.IsServer)
         {
-            instancedNode = HandleEntityCreationServerSide(entityId, entityType);
+            instancedNode = HandleEntityCreationServerSide(@event);
         }
         else
         {
-            instancedNode = HandleEntityCreationClientSide(entityId, entityType);
+            instancedNode = HandleEntityCreationClientSide(@event);
         }
 
-        InitializeEntity(instancedNode, entityId, entityType, authority);
+        if (instancedNode is not INetworkedEntity networkedEntity)
+        {
+            throw new MonkeNetException($"Can't spawn entity that is not a {typeof(INetworkedEntity).Name}");
+        }
+
+        InitializeEntity(instancedNode, networkedEntity, @event);
         AddChild(instancedNode);
         Entities.Add(instancedNode);
         return instancedNode;
     }
 
-    public void DestroyEntity(int entityId)
+    public void DestroyEntity(EntityEvent @event)
     {
-        Node node = GetNode(entityId.ToString());
+        Node node = GetNode(@event.EntityId.ToString());
         Entities.Remove(node);
         node.Free();
     }
 
-    private void InitializeEntity(Node node, int entityId, byte entityType, int authority)
+    private static void InitializeEntity(Node node, INetworkedEntity entity, EntityEvent @event)
     {
-        node.Name = entityId.ToString();
-
-        if (node is INetworkedEntity entity)
-        {
-            entity.EntityId = entityId;
-            entity.EntityType = entityType;
-            entity.Authority = authority;
-        }
+        node.Name = @event.EntityId.ToString();
+        entity.EntityId = @event.EntityId;
+        entity.EntityType = @event.EntityType;
+        entity.Authority = @event.Authority;
     }
 }
