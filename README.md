@@ -25,7 +25,7 @@ MonkeNet is a Godot addon, to start using it copy the `addons\monke-net\` folder
 
 ## 📦 This Repository (Demo Project)
 This repository is the developing environment for the addon, including tests and a demo project showcasing MonkeNet capabilities. If you have any trouble getting it to work, cloning this repository might be a good starting point that you can later adapt to your games requirements.
-<video src="https://github.com/user-attachments/assets/af4b5049-51e4-44cd-b38f-22c4ce614369" width="600px"></video>
+<video src="https://github.com/user-attachments/assets/3695e351-6a4a-4145-893a-d9292bdc803c" width="600px"></video>
 <sup>Example recorded with 200ms lag, 5% packet loss, 10% out of order, 10% duplicated, 10% throttle in Clumsy 0.3</sup>
 
 ## 📐 Project Structure (WIP)
@@ -49,6 +49,7 @@ The `MonkeNetManager` class is a singleton that can be used anywhere in your pro
 - Server Manager
 - Entity Manager
 - Network Clock
+- Input Receiver
 
 ### 🤝 Shared Components
 - Message Serializer
