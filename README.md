@@ -5,6 +5,9 @@ C# Godot Addon that facilitates creating robust multiplayer games using the Clie
 
 ---
 
+> [!WARNING]
+> MonkeNet uses its [own fork of Godot-Jolt](https://github.com/grazianobolla/godot-jolt) for networked physics, in this repository **I've only provided the binaries for Windows**, if you are on Mac/Linux you will have to compile Jolt yourself (it's a simple process)
+
 ## 📚 Background
 After many years since my first attempt at making a functional multiplayer game, I came to one conclusion: developing multiplayer games is hard, specially when leaving the P2P architecture and opting for a more "competitive" approach like having an authoritative server. This project aims to provide a starting point that can be used to speed up the time it takes to go from idea to reality, utilizing its features like:
 - [x] CharacterBody Client Side Prediction and Reconciliation
